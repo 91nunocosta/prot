@@ -36,7 +36,7 @@ optional = true
 
 [tool.poetry.group.cd.dependencies]
 python-semantic-release = "^7.33.1"
-tox = "^3.24.4"
+tox = "^4.4.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
