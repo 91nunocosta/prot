@@ -9,6 +9,7 @@ documentation = "https://91nunocosta.github.io/weave-challenge/weave_challenge.h
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
+prefect = "^2.8.5"
 [tool.poetry.group.lint]
 optional = true
 
@@ -24,12 +25,6 @@ optional = true
 pytest = "^7.2.1"
 pytest-cov = "^3.0.0"
 
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-pdoc = "^12.3.1"
-
 [tool.poetry.group.cd]
 optional = true
 
@@ -40,15 +35,3 @@ tox = "^3.24.4"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.semantic_release]
-version_variable = [
-    "weave_challenge/__init__.py:__version__",
-    "pyproject.toml:version"
-]
-branch = "master"
-build_command = "pip install poetry && poetry build"
-upload_to_release = true
-
-upload_to_repository = false
-repository_url = ""
