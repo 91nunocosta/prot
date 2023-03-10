@@ -1,13 +1,10 @@
 """Test weave_challenge module."""
-from weave_challenge import fib
+from prefect.testing.utilities import prefect_test_harness
+
+from weave_challenge import ingest_flow
 
 
-def test_fib() -> None:
-    """Test fib function."""
-    assert fib(0) == 0
-    assert fib(1) == 1
-    assert fib(2) == 1
-    assert fib(3) == 2
-    assert fib(4) == 3
-    assert fib(5) == 5
-    assert fib(6) == 8
+def test_ingest_flow() -> None:
+    """Test running ingestion workflow, with a temporary testing database."""
+    with prefect_test_harness():
+        assert ingest_flow() is None  # type: ignore
