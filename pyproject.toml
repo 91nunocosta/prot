@@ -29,7 +29,7 @@ pytest-cov = "^3.0.0"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-pdoc = "^12.3.1"
+pdoc = "^13.0.0"
 
 [tool.poetry.group.cd]
 optional = true
