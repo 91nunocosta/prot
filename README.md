@@ -1,6 +1,6 @@
 # Weave Challenge
 
-Weave challenge data engineering coding challenge.
+A solution to [weave challenge data engineering coding challenge](https://github.com/weavebio/data-engineering-coding-challenge).
 
 ## Installation
 
