@@ -44,6 +44,18 @@ Chose the method that is more convenient to you, for example:
    poetry shell
    ```
 
+6. Set environment variables:
+
+    ```bash
+    source .env
+    ```
+
+7. Start _neo4j_:
+
+    ```bash
+    docker-compose up -d
+    ```
+
 ### Running the ingestion workflow
 
 1. Prepare the environment, as described in
