@@ -4,6 +4,7 @@ from pathlib import Path
 import py2neo
 from prefect import flow, task
 
+from weave_challenge.uniprot2graph_config import UNITPROT2GRAPTH_CONFIG
 from weave_challenge.xml_extract import extract_graph
 
 
@@ -17,7 +18,7 @@ def extract_from_xml(xml_file: Path) -> py2neo.Subgraph:
     Returns:
         A properties Subgraph extracted from the xml.
     """
-    return extract_graph(xml_file)
+    return extract_graph(xml_file, UNITPROT2GRAPTH_CONFIG)
 
 
 @task
