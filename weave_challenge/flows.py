@@ -1,4 +1,4 @@
-"""Defines flow ingesting UnitProt xml files data into neo4j."""
+"""Defines flow ingesting UniProt xml files data into neo4j."""
 from pathlib import Path
 
 import py2neo
@@ -34,12 +34,12 @@ def load_into_neo4j(subgraphs: py2neo.Subgraph) -> None:
 
 
 @flow()
-def ingest_unitprot_into_neo4j_flow() -> None:
-    """Flow ingesting UnitProt xml files data into neo4j."""
+def ingest_uniprot_into_neo4j_flow() -> None:
+    """Flow ingesting UniProt xml files data into neo4j."""
     xml_file = Path(__file__).parent.parent / "data" / "Q9Y261.xml"
     subgraphs: py2neo.Subgraph = extract_from_xml(xml_file)
     load_into_neo4j(subgraphs)
 
 
 if __name__ == "__main__":  # pragma: no cover
-    ingest_unitprot_into_neo4j_flow()  # type: ignore
+    ingest_uniprot_into_neo4j_flow()  # type: ignore

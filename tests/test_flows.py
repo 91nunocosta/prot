@@ -5,7 +5,7 @@ import pytest
 from prefect.testing.utilities import prefect_test_harness
 from py2neo import Graph, Node, Relationship
 
-from weave_challenge.flows import ingest_unitprot_into_neo4j_flow, load_into_neo4j
+from weave_challenge.flows import ingest_uniprot_into_neo4j_flow, load_into_neo4j
 
 
 @pytest.fixture
@@ -44,10 +44,10 @@ def test_task_load_into_neo4j(
     assert len(graph.nodes) == 3
 
 
-def test_ingest_unitprot_into_neo4j_flow(
+def test_ingest_uniprot_into_neo4j_flow(
     graph: Graph,  # pylint: disable=redefined-outer-name
 ) -> None:
-    """Test running ingestion UnitProt data into neo4j flow,
+    """Test running ingestion UniProt data into neo4j flow,
     with a temporary testing database.
 
     Args:
@@ -55,7 +55,7 @@ def test_ingest_unitprot_into_neo4j_flow(
 
     """
     with prefect_test_harness():
-        assert ingest_unitprot_into_neo4j_flow()  # type: ignore
+        assert ingest_uniprot_into_neo4j_flow()  # type: ignore
 
     assert len(graph.nodes) > 0
     assert len(graph.relationships) > 0
