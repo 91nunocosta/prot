@@ -40,10 +40,10 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         self,
         nodes: Set[py2neo.Node],
         relationships: Set[py2neo.Relationship],
-        config: Optional[XML2GraphConfig] = None,
+        config: XML2GraphConfig = XML2GraphConfig(),
     ) -> None:
         super().__init__()
-        self.config: Optional[XML2GraphConfig] = config
+        self.config: XML2GraphConfig = config
         self.nodes: Set[py2neo.Node] = nodes
         self.relationships: Set[py2neo.Relationship] = relationships
         self.stack: List[py2neo.Node] = []
@@ -55,7 +55,7 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         return any(attr.startswith(prefix) for prefix in cls.META_ATTR_PREFIXES)
 
     def _node_label(self, element_name: str) -> str:
-        if self.config and element_name in self.config.node_labels:
+        if element_name in self.config.node_labels:
             return self.config.node_labels[element_name]
 
         return element_name[0].upper() + element_name[1:]
@@ -64,14 +64,13 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         if self.active_collection_element and self.config:
             return self.config.collection_elements[self.active_collection_element]
 
-        if self.config and element_name in self.config.relationship_labels:
+        if element_name in self.config.relationship_labels:
             return self.config.relationship_labels[element_name]
         return "HAS_" + inflection.underscore(element_name).upper()
 
     def _property_name(self, element_name: str, attr_name: str) -> str:
         if (
-            self.config
-            and element_name in self.config.property_names
+            element_name in self.config.property_names
             and attr_name in self.config.property_names[element_name]
         ):
             return self.config.property_names[element_name][attr_name]
@@ -81,8 +80,7 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         self, element_name: str, attr_name: str, attr_value: str
     ) -> Any:
         if (
-            self.config
-            and element_name in self.config.property_types
+            element_name in self.config.property_types
             and attr_name in self.config.property_types[element_name]
         ):
             return self.config.property_types[element_name][attr_name](attr_value)
@@ -97,17 +95,12 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         }
         relationship_label = self._relationship_label(name)
 
-        if (
-            self.config
-            and self.config.collection_elements
-            and name in self.config.collection_elements
-        ):
+        if self.config.collection_elements and name in self.config.collection_elements:
             self.active_collection_element = name
             return
 
         if (
-            self.config
-            and self.config.elements_for_merging_with_parents
+            self.config.elements_for_merging_with_parents
             and name in self.config.elements_for_merging_with_parents
             and self.stack
         ):
@@ -144,7 +137,7 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
 
 
 def extract_graph(
-    xml_file: Path, config: Optional[XML2GraphConfig] = None
+    xml_file: Path, config: XML2GraphConfig = XML2GraphConfig()
 ) -> py2neo.Subgraph:
     """Extracts a properties graphs from a XML file.
 
