@@ -276,22 +276,41 @@ def test_extract_graph_with_merges(tmp_path: Path) -> None:
     xml_file_path: Path = create_xml_file(
         tmp_path / "example.xml",
         """
+        <uniprot>
         <entry dataset="Swiss-Prot" created="2000-05-30">
-              <protein _id="Q9Y261"></protein>
+          <accession>Q9Y261</accession>
+          <protein _id="Q9Y261">
+            <recommendedName></recommendedName>
+          </protein>
+          <accession>Q8WUW4</accession>
         </entry>
+        </uniprot>
     """,
     )
 
     config = XML2GraphConfig(elements_for_merging_with_parents={"protein"})
     subgraph: Subgraph = extract_graph(xml_file_path, config=config)
 
-    assert len(subgraph.nodes) == 1
-    assert len(subgraph.relationships) == 0
+    assert len(subgraph.nodes) == 5
+    assert len(subgraph.relationships) == 4
 
     assert equal_nodes(
         subgraph.nodes,
         [
+            Node("Uniprot"),
+            Node("Accession", value="Q9Y261"),
             Node("Protein", _id="Q9Y261", dataset="Swiss-Prot", created="2000-05-30"),
+            Node("Accession", value="Q8WUW4"),
+            Node("RecommendedName"),
+        ],
+    )
+    assert has_relationships(
+        subgraph.relationships,
+        [
+            ("Uniprot", "HAS_ENTRY", "Protein"),
+            ("Protein", "HAS_ACCESSION", "Accession"),
+            ("Protein", "HAS_ACCESSION", "Accession"),
+            ("Protein", "HAS_RECOMMENDED_NAME", "RecommendedName"),
         ],
     )
 
