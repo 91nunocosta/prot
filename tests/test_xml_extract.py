@@ -264,3 +264,33 @@ def test_extract_graph_with_custom_attribute_value_types(tmp_path: Path) -> None
             Node("Entry", created=date(2000, 5, 30)),
         ],
     )
+
+
+def test_extract_graph_with_merges(tmp_path: Path) -> None:
+    """Test task for extracting a properties subgraph from a xml file,
+    configuring elements to merge with their parents.
+
+    Args:
+        tmp_path: temporary directory for creating test data files.
+    """
+    xml_file_path: Path = create_xml_file(
+        tmp_path / "example.xml",
+        """
+        <entry dataset="Swiss-Prot" created="2000-05-30">
+              <protein _id="Q9Y261"></protein>
+        </entry>
+    """,
+    )
+
+    config = XML2GraphConfig(elements_for_merging_with_parents={"protein"})
+    subgraph: Subgraph = extract_graph(xml_file_path, config=config)
+
+    assert len(subgraph.nodes) == 1
+    assert len(subgraph.relationships) == 0
+
+    assert equal_nodes(
+        subgraph.nodes,
+        [
+            Node("Protein", _id="Q9Y261", dataset="Swiss-Prot", created="2000-05-30"),
+        ],
+    )
