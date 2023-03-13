@@ -4,7 +4,7 @@ from typing import FrozenSet, Iterable, Tuple
 
 from py2neo import Node, Subgraph
 
-from weave_challenge.xml_extract import extract_graph
+from weave_challenge.xml_extract import XML2GraphConfig, extract_graph
 
 
 def test_task_extract_from_xml(tmp_path: Path) -> None:
@@ -37,16 +37,28 @@ def test_task_extract_from_xml(tmp_path: Path) -> None:
     with xml_file_path.open("w") as xml_file:
         xml_file.write(xml_document)
 
-    subgraph: Subgraph = extract_graph(
-        xml_file_path,
+    config = XML2GraphConfig(
+        node_labels={
+            "entry": "Record",
+        },
+        relationship_labels={
+            "entry": "HAS_RECORD",
+        },
+        property_names={
+            "entry": {
+                "created": "created_at",
+            }
+        },
     )
+
+    subgraph: Subgraph = extract_graph(xml_file_path, config)
 
     assert len(subgraph.nodes) == 8
     assert len(subgraph.relationships) == 7
 
     nodes = {
         Node("Uniprot"),
-        Node("Entry", dataset="Swiss-Prot", created="2000-05-30"),
+        Node("Record", dataset="Swiss-Prot", created_at="2000-05-30"),
         Node("Accession", value="Q9Y261"),
         Node("Accession", value="Q8WUW4"),
         Node("Protein"),
@@ -70,9 +82,9 @@ def test_task_extract_from_xml(tmp_path: Path) -> None:
     ) == frozenset(
         (frozenset([s]), r, frozenset([t]))
         for s, r, t in [
-            ("Uniprot", "HAS_ENTRY", "Entry"),
-            ("Entry", "HAS_ACCESSION", "Accession"),
-            ("Entry", "HAS_PROTEIN", "Protein"),
+            ("Uniprot", "HAS_RECORD", "Record"),
+            ("Record", "HAS_ACCESSION", "Accession"),
+            ("Record", "HAS_PROTEIN", "Protein"),
             ("Protein", "HAS_RECOMMENDEDNAME", "RecommendedName"),
             ("RecommendedName", "HAS_FULLNAME", "FullName"),
             ("RecommendedName", "HAS_SHORTNAME", "ShortName"),
