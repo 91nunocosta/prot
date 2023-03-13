@@ -1,7 +1,7 @@
 """Provides XML parsing to extract properties graph."""
-import dataclasses
 import io
 import xml.sax  # nosec the input XML are trusted
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set
 
@@ -9,7 +9,7 @@ import inflection
 import py2neo
 
 
-@dataclasses.dataclass
+@dataclass
 class XML2GraphConfig:
     """Configures how a XML document is translated into a properties graph,
     defining:
@@ -18,10 +18,12 @@ class XML2GraphConfig:
         - custom relationships labels for XML childship relationships.
     """
 
-    node_labels: Dict[str, str]
-    property_names: Dict[str, Dict[str, str]]
-    property_types: Dict[str, Dict[str, Callable[[str], Any]]]
-    relationship_labels: Dict[str, str]
+    node_labels: Dict[str, str] = field(default_factory=dict)
+    property_names: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    property_types: Dict[str, Dict[str, Callable[[str], Any]]] = field(
+        default_factory=dict
+    )
+    relationship_labels: Dict[str, str] = field(default_factory=dict)
 
 
 class PropertiesSubgraphHandler(xml.sax.ContentHandler):
