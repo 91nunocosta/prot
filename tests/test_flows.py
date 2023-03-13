@@ -1,8 +1,24 @@
 """Test weave_challenge module."""
+from pathlib import Path
+
 from prefect.testing.utilities import prefect_test_harness
 from py2neo import Graph, Node, Relationship
 
-from weave_challenge.flows import ingest_unitprot_into_neo4j_flow, load_into_neo4j
+from weave_challenge.flows import (
+    extract_from_xml,
+    ingest_unitprot_into_neo4j_flow,
+    load_into_neo4j,
+)
+
+
+def test_task_extract_from_xml() -> None:
+    """Test task for extracting a stream of subgraphs from a xml file."""
+    subgraph_stream = list(
+        extract_from_xml.fn(Path(__file__).parent.parent / "data" / "Q9Y261.xml")
+    )
+
+    assert len(subgraph_stream[0].nodes) > 1
+    assert len(subgraph_stream[0].relationships) > 1
 
 
 def test_task_load_into_neo4j() -> None:
@@ -34,4 +50,4 @@ def test_ingest_unitprot_into_neo4j_flow() -> None:
     with a temporary testing database.
     """
     with prefect_test_harness():
-        assert ingest_unitprot_into_neo4j_flow() is None  # type: ignore
+        assert ingest_unitprot_into_neo4j_flow()  # type: ignore
