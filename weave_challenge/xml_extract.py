@@ -13,9 +13,11 @@ import py2neo
 class XML2GraphConfig:
     """Configures how a XML document is translated into a properties graph,
     defining:
-        - custom node labels for XML element types
-        - custom property names for XML element attributes
-        - custom relationships labels for XML childship relationships.
+        - custom node labels for XML element types;
+        - custom property names for XML element attributes;
+        - custom relationships labels for XML childship relationships;
+        - elements to merge with their parents, replacing their parent name and
+        moving their attributes to their parents.
     """
 
     node_labels: Dict[str, str] = field(default_factory=dict)
@@ -24,6 +26,7 @@ class XML2GraphConfig:
         default_factory=dict
     )
     relationship_labels: Dict[str, str] = field(default_factory=dict)
+    elements_for_merging_with_parents: Set[str] = field(default_factory=set)
 
 
 class PropertiesSubgraphHandler(xml.sax.ContentHandler):
@@ -86,6 +89,19 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
             for k, v in attrs.items()
             if not self._is_meta_attr(k)
         }
+
+        if (
+            self.config
+            and self.config.elements_for_merging_with_parents
+            and name in self.config.elements_for_merging_with_parents
+            and self.stack
+        ):
+            node = self.stack[-1]
+            node.clear_labels()
+            node.add_label(node_label)
+            node.update(properties)
+            return
+
         node = py2neo.Node(node_label, **properties)
         self.nodes.add(node)
         if self.stack:
@@ -98,15 +114,17 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         self.text_stack.append(io.StringIO())
 
     def characters(self, content: str) -> None:
-        self.text_stack[-1].write(content)
+        if self.text_stack:
+            self.text_stack[-1].write(content)
 
     def endElement(self, _: str) -> None:
-        parent = self.stack.pop()
-        if self.text_stack:
-            txt: str = self.text_stack[-1].getvalue().strip()
-            if txt:
-                parent["value"] = txt
-        self.text_stack.pop()
+        if self.stack:
+            parent = self.stack.pop()
+            if self.text_stack:
+                txt: str = self.text_stack[-1].getvalue().strip()
+                if txt:
+                    parent["value"] = txt
+            self.text_stack.pop()
 
 
 def extract_graph(
