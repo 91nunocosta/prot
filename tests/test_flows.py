@@ -68,7 +68,22 @@ def test_task_extract_from_xml(tmp_path: Path) -> None:
             (frozenset(node.labels), frozenset(node.items())) for node in nodes
         )
 
-    assert comparable(nodes) == comparable(subgraph.nodes)
+    assert comparable(subgraph.nodes) == comparable(nodes)
+
+    assert frozenset(
+        (frozenset(r.start_node.labels), type(r).__name__, frozenset(r.end_node.labels))
+        for r in subgraph.relationships
+    ) == frozenset(
+        (frozenset([s]), r, frozenset([t]))
+        for s, r, t in [
+            ("uniprot", "HAS_ENTRY", "entry"),
+            ("entry", "HAS_ACCESSION", "accession"),
+            ("entry", "HAS_PROTEIN", "protein"),
+            ("protein", "HAS_RECOMMENDEDNAME", "recommendedName"),
+            ("recommendedName", "HAS_FULLNAME", "fullName"),
+            ("recommendedName", "HAS_SHORTNAME", "shortName"),
+        ]
+    )
 
 
 def test_task_load_into_neo4j() -> None:
