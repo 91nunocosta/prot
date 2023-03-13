@@ -1,15 +1,34 @@
 """Test weave_challenge flows."""
+from typing import Iterable
+
+import pytest
 from prefect.testing.utilities import prefect_test_harness
 from py2neo import Graph, Node, Relationship
 
 from weave_challenge.flows import ingest_unitprot_into_neo4j_flow, load_into_neo4j
 
 
-def test_task_load_into_neo4j() -> None:
-    """Test loading a stream of subgraphs into neo4j."""
-    graph = Graph()
-    graph.delete_all()
+@pytest.fixture
+def graph() -> Iterable[Graph]:
+    """Returns a clean graph instance.
 
+    Yields:
+        Graph instance.
+    """
+    _graph = Graph()
+    _graph.delete_all()
+    yield _graph
+    _graph.delete_all()
+
+
+def test_task_load_into_neo4j(
+    graph: Graph,  # pylint: disable=redefined-outer-name
+) -> None:
+    """Test loading a stream of subgraphs into neo4j.
+
+    Args:
+        graph (Graph): clean py2neo Graph instance
+    """
     alice = Node("Person", name="Alice")
     bob = Node("Person", name="Bob")
     carol = Node("Person", name="Carol")
@@ -21,17 +40,22 @@ def test_task_load_into_neo4j() -> None:
     bob_carol = knows(bob, carol)
     carol_bob = knows(carol, bob)
     friends = alice_bob | bob_alice | alice_carol | carol_alice | bob_carol | carol_bob
-
     load_into_neo4j.fn(friends)
-
     assert len(graph.nodes) == 3
 
-    graph.delete_all()
 
-
-def test_ingest_unitprot_into_neo4j_flow() -> None:
+def test_ingest_unitprot_into_neo4j_flow(
+    graph: Graph,  # pylint: disable=redefined-outer-name
+) -> None:
     """Test running ingestion UnitProt data into neo4j flow,
     with a temporary testing database.
+
+    Args:
+        graph (Graph): clean Graph instance
+
     """
     with prefect_test_harness():
         assert ingest_unitprot_into_neo4j_flow()  # type: ignore
+
+    assert len(graph.nodes) > 0
+    assert len(graph.relationships) > 0
