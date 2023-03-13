@@ -51,13 +51,7 @@ def test_task_extract_from_xml(tmp_path: Path) -> None:
     assert len(subgraph.relationships) == 7
 
     nodes = {
-        Node(
-            "uniprot",
-            **{
-                "xmlns": "http://uniprot.org/uniprot",
-                "xsi:schemaLocation": "http://uniprot.org/uniprot",
-            }
-        ),
+        Node("uniprot"),
         Node("entry", dataset="Swiss-Prot", created="2000-05-30"),
         Node("accession"),
         Node("protein"),
