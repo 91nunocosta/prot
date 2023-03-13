@@ -294,3 +294,52 @@ def test_extract_graph_with_merges(tmp_path: Path) -> None:
             Node("Protein", _id="Q9Y261", dataset="Swiss-Prot", created="2000-05-30"),
         ],
     )
+
+
+def test_extract_graph_with_collection_elements(tmp_path: Path) -> None:
+    """Test task for extracting a properties subgraph from a xml file,
+    configuring collection elements.
+
+    Args:
+        tmp_path: temporary directory for creating test data files.
+    """
+    xml_file_path: Path = create_xml_file(
+        tmp_path / "example.xml",
+        """
+        <citation>
+          <title>The DNA sequence and...</title>
+          <authorList>
+            <person name="Deloukas P."/>
+            <person name="Matthews L.H."/>
+            <person name="Ashurst J.L."/>
+          </authorList>
+        </citation>
+
+    """,
+    )
+
+    config = XML2GraphConfig(collection_elements={"authorList": "HAS_AUTHOR"})
+    subgraph: Subgraph = extract_graph(xml_file_path, config=config)
+
+    assert len(subgraph.nodes) == 5
+    assert len(subgraph.relationships) == 4
+
+    assert equal_nodes(
+        subgraph.nodes,
+        [
+            Node("Citation"),
+            Node("Title", value="The DNA sequence and..."),
+            Node("Person", name="Deloukas P."),
+            Node("Person", name="Matthews L.H."),
+            Node("Person", name="Ashurst J.L."),
+        ],
+    )
+    assert has_relationships(
+        subgraph.relationships,
+        [
+            ("Citation", "HAS_TITLE", "Title"),
+            ("Citation", "HAS_AUTHOR", "Person"),
+            ("Citation", "HAS_AUTHOR", "Person"),
+            ("Citation", "HAS_AUTHOR", "Person"),
+        ],
+    )

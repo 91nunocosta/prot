@@ -17,7 +17,8 @@ class XML2GraphConfig:
         - custom property names for XML element attributes;
         - custom relationships labels for XML childship relationships;
         - elements to merge with their parents, replacing their parent name and
-        moving their attributes to their parents.
+        moving their attributes to their parents
+        - elements which aren't nodes and represent collections.
     """
 
     node_labels: Dict[str, str] = field(default_factory=dict)
@@ -27,6 +28,7 @@ class XML2GraphConfig:
     )
     relationship_labels: Dict[str, str] = field(default_factory=dict)
     elements_for_merging_with_parents: Set[str] = field(default_factory=set)
+    collection_elements: Dict[str, str] = field(default_factory=dict)
 
 
 class PropertiesSubgraphHandler(xml.sax.ContentHandler):
@@ -46,6 +48,7 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         self.relationships: Set[py2neo.Relationship] = relationships
         self.stack: List[py2neo.Node] = []
         self.text_stack: List[io.StringIO] = []
+        self.active_collection_element: Optional[str] = None
 
     @classmethod
     def _is_meta_attr(cls, attr: str) -> bool:
@@ -58,6 +61,9 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         return element_name[0].upper() + element_name[1:]
 
     def _relationship_label(self, element_name: str) -> str:
+        if self.active_collection_element and self.config:
+            return self.config.collection_elements[self.active_collection_element]
+
         if self.config and element_name in self.config.relationship_labels:
             return self.config.relationship_labels[element_name]
         return "HAS_" + inflection.underscore(element_name).upper()
@@ -89,6 +95,15 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
             for k, v in attrs.items()
             if not self._is_meta_attr(k)
         }
+        relationship_label = self._relationship_label(name)
+
+        if (
+            self.config
+            and self.config.collection_elements
+            and name in self.config.collection_elements
+        ):
+            self.active_collection_element = name
+            return
 
         if (
             self.config
@@ -105,7 +120,6 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         node = py2neo.Node(node_label, **properties)
         self.nodes.add(node)
         if self.stack:
-            relationship_label = self._relationship_label(name)
             parent_relationship = py2neo.Relationship(
                 self.stack[-1], relationship_label, node
             )
@@ -117,7 +131,7 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         if self.text_stack:
             self.text_stack[-1].write(content)
 
-    def endElement(self, _: str) -> None:
+    def endElement(self, name: str) -> None:
         if self.stack:
             parent = self.stack.pop()
             if self.text_stack:
@@ -125,6 +139,8 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
                 if txt:
                     parent["value"] = txt
             self.text_stack.pop()
+        if self.active_collection_element == name:
+            self.active_collection_element = None
 
 
 def extract_graph(
