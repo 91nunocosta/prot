@@ -73,7 +73,7 @@ Chose the method that is more convenient to you, for example:
 4. Invoke the workflow:
 
     ```bash
-    python weave_challenge/flows/ingest_unitprot_into_neo4j.py
+    python weave_challenge/flows.py
     ```
 
 ## Development
