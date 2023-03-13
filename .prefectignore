@@ -1,0 +1,7 @@
+!.prefectignore
+tests
+.*
+coverage.xml
+docker-compose.yml
+README.md
+tox.ini
