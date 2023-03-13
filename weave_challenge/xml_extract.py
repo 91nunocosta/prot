@@ -126,12 +126,13 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
 
     def endElement(self, name: str) -> None:
         if self.stack:
-            parent = self.stack.pop()
-            if self.text_stack:
-                txt: str = self.text_stack[-1].getvalue().strip()
-                if txt:
-                    parent["value"] = txt
-            self.text_stack.pop()
+            if name not in self.config.elements_for_merging_with_parents:
+                parent = self.stack.pop()
+                if self.text_stack:
+                    txt: str = self.text_stack[-1].getvalue().strip()
+                    if txt:
+                        parent["value"] = txt
+                self.text_stack.pop()
         if self.active_collection_element == name:
             self.active_collection_element = None
 
