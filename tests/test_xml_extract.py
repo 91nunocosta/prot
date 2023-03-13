@@ -1,7 +1,9 @@
 """Test weave_challenge module."""
+from datetime import date
 from pathlib import Path
 from typing import FrozenSet, Iterable, Tuple
 
+import dateutil.parser
 from py2neo import Node, Subgraph
 
 from weave_challenge.xml_extract import XML2GraphConfig, extract_graph
@@ -49,6 +51,9 @@ def test_task_extract_from_xml(tmp_path: Path) -> None:
                 "created": "created_at",
             }
         },
+        property_types={
+            "entry": {"created": lambda v: dateutil.parser.parse(v).date()}
+        },
     )
 
     subgraph: Subgraph = extract_graph(xml_file_path, config)
@@ -58,7 +63,7 @@ def test_task_extract_from_xml(tmp_path: Path) -> None:
 
     nodes = {
         Node("Uniprot"),
-        Node("Record", dataset="Swiss-Prot", created_at="2000-05-30"),
+        Node("Record", dataset="Swiss-Prot", created_at=date(2000, 5, 30)),
         Node("Accession", value="Q9Y261"),
         Node("Accession", value="Q8WUW4"),
         Node("Protein"),

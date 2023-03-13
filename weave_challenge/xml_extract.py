@@ -3,7 +3,7 @@ import dataclasses
 import io
 import xml.sax  # nosec the input XML are trusted
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set
 
 import inflection
 import py2neo
@@ -20,6 +20,7 @@ class XML2GraphConfig:
 
     node_labels: Dict[str, str]
     property_names: Dict[str, Dict[str, str]]
+    property_types: Dict[str, Dict[str, Callable[[str], Any]]]
     relationship_labels: Dict[str, str]
 
 
@@ -65,10 +66,21 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
             return self.config.property_names[element_name][attr_name]
         return attr_name
 
+    def _property_value(
+        self, element_name: str, attr_name: str, attr_value: str
+    ) -> Any:
+        if (
+            self.config
+            and element_name in self.config.property_types
+            and attr_name in self.config.property_types[element_name]
+        ):
+            return self.config.property_types[element_name][attr_name](attr_value)
+        return attr_value
+
     def startElement(self, name: str, attrs: Dict[str, str]) -> None:
         node_label = self._node_label(name)
         properties: Dict[str, str] = {
-            self._property_name(name, k): v
+            self._property_name(name, k): self._property_value(name, k, v)
             for k, v in attrs.items()
             if not self._is_meta_attr(k)
         }
