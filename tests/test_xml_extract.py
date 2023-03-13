@@ -45,14 +45,14 @@ def test_task_extract_from_xml(tmp_path: Path) -> None:
     assert len(subgraph.relationships) == 7
 
     nodes = {
-        Node("uniprot"),
-        Node("entry", dataset="Swiss-Prot", created="2000-05-30"),
-        Node("accession", value="Q9Y261"),
-        Node("accession", value="Q8WUW4"),
-        Node("protein"),
-        Node("recommendedName"),
-        Node("fullName", value="Hepatocyte nuclear factor 3-beta"),
-        Node("shortName", value="HNF-3B"),
+        Node("Uniprot"),
+        Node("Entry", dataset="Swiss-Prot", created="2000-05-30"),
+        Node("Accession", value="Q9Y261"),
+        Node("Accession", value="Q8WUW4"),
+        Node("Protein"),
+        Node("RecommendedName"),
+        Node("FullName", value="Hepatocyte nuclear factor 3-beta"),
+        Node("ShortName", value="HNF-3B"),
     }
 
     def comparable(
@@ -70,11 +70,11 @@ def test_task_extract_from_xml(tmp_path: Path) -> None:
     ) == frozenset(
         (frozenset([s]), r, frozenset([t]))
         for s, r, t in [
-            ("uniprot", "HAS_ENTRY", "entry"),
-            ("entry", "HAS_ACCESSION", "accession"),
-            ("entry", "HAS_PROTEIN", "protein"),
-            ("protein", "HAS_RECOMMENDEDNAME", "recommendedName"),
-            ("recommendedName", "HAS_FULLNAME", "fullName"),
-            ("recommendedName", "HAS_SHORTNAME", "shortName"),
+            ("Uniprot", "HAS_ENTRY", "Entry"),
+            ("Entry", "HAS_ACCESSION", "Accession"),
+            ("Entry", "HAS_PROTEIN", "Protein"),
+            ("Protein", "HAS_RECOMMENDEDNAME", "RecommendedName"),
+            ("RecommendedName", "HAS_FULLNAME", "FullName"),
+            ("RecommendedName", "HAS_SHORTNAME", "ShortName"),
         ]
     )

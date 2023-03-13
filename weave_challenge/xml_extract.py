@@ -27,11 +27,18 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
     def _is_meta_attr(cls, attr: str) -> bool:
         return any(attr.startswith(prefix) for prefix in cls.META_ATTR_PREFIXES)
 
+    def _node_label(self, element_name: str) -> str:
+        if not element_name:
+            return ""
+
+        return element_name[0].upper() + element_name[1:]
+
     def startElement(self, name: str, attrs: Dict[str, str]) -> None:
+        node_label = self._node_label(name)
         properties: Dict[str, str] = {
             k: v for k, v in attrs.items() if not self._is_meta_attr(k)
         }
-        node = py2neo.Node(name, **properties)
+        node = py2neo.Node(node_label, **properties)
         self.nodes.add(node)
         if self.stack:
             parent_relationship = py2neo.Relationship(
