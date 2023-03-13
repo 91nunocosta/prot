@@ -1,4 +1,5 @@
 """Defines flow ingesting UnitProt xml files data into neo4j."""
+import io
 import xml.sax  # nosec the input XML are trusted
 from pathlib import Path
 from typing import Dict, List, Set
@@ -34,6 +35,7 @@ def extract_from_xml(xml_file: Path) -> py2neo.Subgraph:
             self.nodes: Set[py2neo.Node] = nodes
             self.relationships: Set[py2neo.Relationship] = relationships
             self.stack: List[py2neo.Node] = []
+            self.text_stack: List[io.StringIO] = []
 
         @classmethod
         def _is_meta_attr(cls, attr: str) -> bool:
@@ -51,9 +53,18 @@ def extract_from_xml(xml_file: Path) -> py2neo.Subgraph:
                 )
                 self.relationships.add(parent_relationship)
             self.stack.append(node)
+            self.text_stack.append(io.StringIO())
+
+        def characters(self, content: str) -> None:
+            self.text_stack[-1].write(content)
 
         def endElement(self, _: str) -> None:
-            self.stack.pop()
+            parent = self.stack.pop()
+            if self.text_stack:
+                txt: str = self.text_stack[-1].getvalue().strip()
+                if txt:
+                    parent["value"] = txt
+            self.text_stack.pop()
 
     xml.sax.parse(  # nosect the input XML are trusted
         xml_file.absolute().as_posix(), PropertiesSubgraphHandler(nodes, relationships)

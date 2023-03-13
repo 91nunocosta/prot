@@ -53,11 +53,12 @@ def test_task_extract_from_xml(tmp_path: Path) -> None:
     nodes = {
         Node("uniprot"),
         Node("entry", dataset="Swiss-Prot", created="2000-05-30"),
-        Node("accession"),
+        Node("accession", value="Q9Y261"),
+        Node("accession", value="Q8WUW4"),
         Node("protein"),
         Node("recommendedName"),
-        Node("fullName"),
-        Node("shortName"),
+        Node("fullName", value="Hepatocyte nuclear factor 3-beta"),
+        Node("shortName", value="HNF-3B"),
     }
 
     def comparable(
