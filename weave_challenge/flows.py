@@ -23,6 +23,8 @@ def extract_from_xml(xml_file: Path) -> py2neo.Subgraph:
     class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         """SAX XML handler for collecting property graph's nodes and relationships."""
 
+        META_ATTR_PREFIXES = {"xmlns", "xsi"}
+
         def __init__(
             self,
             nodes: Set[py2neo.Node],
@@ -33,8 +35,15 @@ def extract_from_xml(xml_file: Path) -> py2neo.Subgraph:
             self.relationships: Set[py2neo.Relationship] = relationships
             self.stack: List[py2neo.Node] = []
 
+        @classmethod
+        def _is_meta_attr(cls, attr: str) -> bool:
+            return any(attr.startswith(prefix) for prefix in cls.META_ATTR_PREFIXES)
+
         def startElement(self, name: str, attrs: Dict[str, str]) -> None:
-            node = py2neo.Node(name, **dict(attrs))
+            properties: Dict[str, str] = {
+                k: v for k, v in attrs.items() if not self._is_meta_attr(k)
+            }
+            node = py2neo.Node(name, **properties)
             self.nodes.add(node)
             if self.stack:
                 parent_relationship = py2neo.Relationship(
