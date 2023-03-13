@@ -85,8 +85,8 @@ def test_task_extract_from_xml(tmp_path: Path) -> None:
             ("Uniprot", "HAS_RECORD", "Record"),
             ("Record", "HAS_ACCESSION", "Accession"),
             ("Record", "HAS_PROTEIN", "Protein"),
-            ("Protein", "HAS_RECOMMENDEDNAME", "RecommendedName"),
-            ("RecommendedName", "HAS_FULLNAME", "FullName"),
-            ("RecommendedName", "HAS_SHORTNAME", "ShortName"),
+            ("Protein", "HAS_RECOMMENDED_NAME", "RecommendedName"),
+            ("RecommendedName", "HAS_FULL_NAME", "FullName"),
+            ("RecommendedName", "HAS_SHORT_NAME", "ShortName"),
         ]
     )

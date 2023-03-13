@@ -5,6 +5,7 @@ import xml.sax  # nosec the input XML are trusted
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
+import inflection
 import py2neo
 
 
@@ -53,7 +54,7 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
     def _relationship_label(self, element_name: str) -> str:
         if self.config and element_name in self.config.relationship_labels:
             return self.config.relationship_labels[element_name]
-        return "HAS_" + element_name.upper()
+        return "HAS_" + inflection.underscore(element_name).upper()
 
     def _property_name(self, element_name: str, attr_name: str) -> str:
         if (

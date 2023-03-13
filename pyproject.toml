@@ -11,6 +11,7 @@ documentation = "https://91nunocosta.github.io/weave-challenge/weave_challenge.h
 python = ">=3.8,<4.0"
 prefect = "^2.8.5"
 py2neo = "^2021.2.3"
+inflection = "^0.5.1"
 [tool.poetry.group.lint]
 optional = true
 
