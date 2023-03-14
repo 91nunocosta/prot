@@ -27,6 +27,12 @@ Follow the [poetry installation guide](https://python-poetry.org/docs/#installat
 Chose the method that is more convenient to you, for example:
 
    ```bash
+   pip install --user poetry
+   ```
+
+   or
+
+   ```bash
    curl -sSL\
         https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py \
       | python -
@@ -44,7 +50,7 @@ Chose the method that is more convenient to you, for example:
    poetry shell
    ```
 
-6. Set environment variables:
+6. Set environment variables, needed for _neo4j_:
 
     ```bash
     source .env
@@ -58,6 +64,8 @@ Chose the method that is more convenient to you, for example:
 
 ### Running the ingestion workflow
 
+#### Invoking the workflow from the command line
+
 1. Prepare the environment, as described in
 [**Preparing the environment**](#preparing-the-environment).
 
@@ -67,14 +75,44 @@ Chose the method that is more convenient to you, for example:
     prefect server start
     ```
 
-3. Open the web page at the URL displayed in previous command's output,
-   in order to monitor workflow execution.
+3. _(Optional)_ Open the [Prefect UI](https://docs.prefect.io/ui/overview/)
+at the URL displayed in previous command's output,
+in order to monitor workflow execution.
 
 4. Invoke the workflow:
 
     ```bash
     python weave_challenge/flows.py
     ```
+
+#### Invoking the workflow from the Prefect UI
+
+1. Prepare the environment, as described in
+[**Preparing the environment**](#preparing-the-environment).
+
+2. Create and upload an [deployment](https://docs.prefect.io/concepts/deployments/),
+   containing the workflow:
+
+    ```bash
+    prefect deployment build weave_challenge/flows.py:ingest_uniprot_into_neo4j_flow \
+        --name ingest_uniprot_into_neo4j \
+        --apply
+    ```
+
+3. Start a [Prefect agent](https://docs.prefect.io/concepts/work-pools/)
+
+    ```bash
+    prefect agent start -q 'default'
+    ```
+
+4. Start _prefect_ server:
+
+    ```bash
+    prefect server start
+    ```
+
+5. Open the [Prefect UI](https://docs.prefect.io/ui/overview/)
+at the URL displayed in previous command's output.
 
 ## Development
 
