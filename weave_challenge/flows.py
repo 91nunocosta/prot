@@ -1,4 +1,5 @@
 """Defines flow ingesting UniProt xml files data into neo4j."""
+import os
 from pathlib import Path
 
 import py2neo
@@ -6,6 +7,8 @@ from prefect import flow, task
 
 from weave_challenge.uniprot2graph_config import UNITPROT2GRAPTH_CONFIG
 from weave_challenge.xml_extract import extract_graph
+
+DEFAULT_DATA_DIR = os.environ.get("DATA_DIR", "./data")
 
 
 @task
@@ -34,11 +37,17 @@ def load_into_neo4j(subgraphs: py2neo.Subgraph) -> None:
 
 
 @flow()
-def ingest_uniprot_into_neo4j_flow() -> None:
-    """Flow ingesting UniProt xml files data into neo4j."""
-    xml_file = Path(__file__).parent.parent / "data" / "Q9Y261.xml"
-    subgraphs: py2neo.Subgraph = extract_from_xml(xml_file)
-    load_into_neo4j(subgraphs)
+def ingest_uniprot_into_neo4j_flow(data_directory_path: str = DEFAULT_DATA_DIR) -> None:
+    """Flow ingesting UniProt xml files data into neo4j.
+
+    Args:
+        data_directory_path (str): path to the directory containing the
+                                   XML UniProt files to ingest.
+    """
+    data_directory: Path = Path(data_directory_path)
+    for xml_file in data_directory.glob("*.xml"):
+        subgraphs: py2neo.Subgraph = extract_from_xml(xml_file)
+        load_into_neo4j(subgraphs)
 
 
 if __name__ == "__main__":  # pragma: no cover
