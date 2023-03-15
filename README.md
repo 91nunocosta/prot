@@ -113,7 +113,8 @@ Chose the method that is more convenient to you, for example:
    poetry shell
    ```
 
-6. Set environment variables needed for _neo4j_:
+6. Set environment variables needed for _neo4j_, which set the neo4j URI
+   and disables the authentication:
 
     ```bash
     source .env
@@ -124,6 +125,9 @@ Chose the method that is more convenient to you, for example:
     ```bash
     docker-compose up -d
     ```
+
+8. Open _neo4j_ at http://localhost:7474/browser/, select `No authentication` as
+   _Authentication type_ and press _connect_.
 
 ### Running the ingestion workflow
 
@@ -144,6 +148,8 @@ at the URL displayed in the following command's output.
     ```bash
     prefect server start
     ```
+
+4. Check _neo4j_ at http://localhost:7474/browser/.
 
 #### Invoking the workflow from the Prefect UI
 
@@ -173,6 +179,8 @@ at the URL displayed in the following command's output.
 
 5. Open the [Prefect UI](https://docs.prefect.io/ui/overview/)
 at the URL displayed in the previous command's output.
+
+6. Check _neo4j_ at http://localhost:7474/browser/.
 
 ## Next steps
 
