@@ -197,10 +197,12 @@ configuring [_Prefect Task Runners_](https://docs.prefect.io/concepts/task-runne
 the extract and load tasks.
 
 2. Extract and load the XML files in chunks. That would allow handling XML files that
-don't fit into memory. Furthermore, it would enable fine-tuning the _neo4j_
-transactions size.
+don't fit into memory.
 
-3. Develop bulk _create_ and _merge_ operations optimized for _tree-shaped graphs_.
+3. Fine-tune the _neo4j_ transactions size, buffering the extracted nodes and
+   relationships if needed.
+
+4. Develop bulk _create_ and _merge_ operations optimized for _tree-shaped graphs_.
 Here we could use several heuristics:
 
    1. Assign univocal identifiers for every _node_ based on the corresponding XML
@@ -238,16 +240,22 @@ for every _Child_ _node_ type as the following:
     MERGE (:Parent {id: r.parent.id})-[R]->(:Child: {id: r.child.id})
     ```
 
-4. Develop a slimmer representation of the graphs. `py2neo` stores _property_ names
+5. Develop a slimmer representation of the graphs. `py2neo` stores _property_ names
 and values along with the _nodes_ and _relationships_. Yet, the nodes of the same _label_/type,
 share the same set of properties. A collection of bi-dimensional arrays per _node_ type can
 store all instances for each type. Rows would represent the _nodes_ and columns their
 _properties_. This way, we would store each _property_ name only once per _node_ type.
 
-5. Encapsulate the flow into a docker and configure Prefect with a
+6. Extend the [uniprot2graph](./prot/uniprot2graph_config.py) configuration to improve
+the graph representation of _UniProt_ data. We could create a Python script to generate
+part of the configuration (e.g., property types) from the _UniProt_ XML schema. Someone with
+domain knowledge could fill in the details in the config.
+We could add support to extra configuration parameters if needed.
+
+7. Encapsulate the flow into a docker and configure Prefect with a
 [Kubernetes infrastructure](https://docs.prefect.io/concepts/infrastructure/#kubernetesjob).
 
-6. Develop a Kubernetes configuration for Prefect (server, agents, blocks, etc.).
+8. Develop a Kubernetes configuration for Prefect (server, agents, blocks, etc.).
 It is also possible to use [Prefect managed cloud service](https://www.prefect.io/cloud/).
 Yet, the effort of setting-up Prefect would pay off in the long run and avoid vendor lock-in.
 
