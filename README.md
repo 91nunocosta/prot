@@ -55,7 +55,7 @@ It allows for translation into a _Cypher_ transaction as follows:
 ```
 
 As _n2_ is bound to the variable `n2` after the first clause, the next one doesn't imply
-a lookup for it. In this case, no lookup would be necessary.
+a lookup. In this case, no lookup would be necessary.
 
 With a partial representation of the graph, it could be necessary to create one element
 at a time:
@@ -74,8 +74,8 @@ Although I didn't investigate to what extent `py2neo` takes advantage of such
 optimizations, its model is a good starting point.
 
 `py2neo` may be slower than `neo4j` official library at transaction execution.
-Yet, we could build on the `py2neo` _properties graph_ interface to implement the same
-operations with the mentioned optimizations.
+Yet, we could extend `neo4j` with a _properties graph_ interface matching `py2neo`'s
+one. Then taking advantage of the mentioned optimizations.
 
 ## Local usage
 
@@ -99,14 +99,6 @@ Chose the method that is more convenient to you, for example:
 
    ```bash
    pip install --user poetry
-   ```
-
-   or
-
-   ```bash
-   curl -sSL\
-        https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py \
-      | python -
    ```
 
 4. Create a new virtual environment (managed by _poetry_) with the project dependencies.
@@ -182,7 +174,7 @@ at the URL displayed in the following command's output.
 5. Open the [Prefect UI](https://docs.prefect.io/ui/overview/)
 at the URL displayed in the previous command's output.
 
-### Next steps
+## Next steps
 
 This solution is a proof of concept scoped by the following assumptions:
 
@@ -261,7 +253,7 @@ Yet, the effort of setting-up Prefect would pay off in the long run and avoid ve
 2. Install linting dependencies:
 
    ```bash
-   poetry install --with lint
+   poetry install --with lint --with test
    ```
 
 3. (Optional) Install linting pre-commit hooks:
