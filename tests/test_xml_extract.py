@@ -1,4 +1,4 @@
-"""Test weave_challenge module."""
+"""Test prot module."""
 from datetime import date
 from pathlib import Path
 from typing import Any, FrozenSet, Iterable, Tuple
@@ -6,7 +6,7 @@ from typing import Any, FrozenSet, Iterable, Tuple
 import dateutil.parser
 from py2neo import Node, Relationship, Subgraph
 
-from weave_challenge.xml_extract import XML2GraphConfig, extract_graph
+from prot.xml_extract import XML2GraphConfig, extract_graph
 
 
 def create_xml_file(path: Path, content: str) -> Path:

@@ -1,6 +1,4 @@
-# Weave Challenge
-
-Weave challenge data engineering coding challenge.
+# Prot
 
 ## Stack
 
@@ -86,13 +84,13 @@ operations with the mentioned optimizations.
 1. Clone the repository.
 
    ```bash
-   git clone git@github.com:91nunocosta/weave-challenge.git
+   git clone git@github.com:91nunocosta/prot.git
    ```
 
 2. Change to the project directory.
 
    ```bash
-   cd weave-challenge
+   cd prot
    ```
 
 3. Install [_poetry_](https://python-poetry.org/) _package and dependency manager_.
@@ -145,7 +143,7 @@ Chose the method that is more convenient to you, for example:
 2. Invoke the workflow:
 
     ```bash
-    python weave_challenge/flows.py
+    python prot/flows.py
     ```
 
 3. _(Optional)_ Open the [Prefect UI](https://docs.prefect.io/ui/overview/)
@@ -164,7 +162,7 @@ at the URL displayed in the following command's output.
    containing the workflow:
 
     ```bash
-    prefect deployment build weave_challenge/flows.py:ingest_uniprot_into_neo4j_flow \
+    prefect deployment build prot/flows.py:ingest_uniprot_into_neo4j_flow \
         --name ingest_uniprot_into_neo4j \
         --apply
     ```

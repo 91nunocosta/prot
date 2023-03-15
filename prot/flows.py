@@ -5,8 +5,8 @@ from pathlib import Path
 import py2neo
 from prefect import flow, task
 
-from weave_challenge.uniprot2graph_config import UNITPROT2GRAPTH_CONFIG
-from weave_challenge.xml_extract import extract_graph
+from prot.uniprot2graph_config import UNITPROT2GRAPTH_CONFIG
+from prot.xml_extract import extract_graph
 
 DEFAULT_DATA_DIR = os.environ.get("DATA_DIR", "./data")
 

@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "weave-challenge"
+name = "prot"
 version = "0.1.0"
-description = "Weave challenge data engineering coding challenge."
+description = ""
 authors = ["Nuno Costa <91nunocosta@gmail.com>"]
 readme = "README.md"
-repository = "https://github.com/91nunocosta/weave-challenge/"
-documentation = "https://91nunocosta.github.io/weave-challenge/weave_challenge.html"
+repository = "https://github.com/91nunocosta/prot/"
+documentation = "https://91nunocosta.github.io/prot/prot.html"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"

@@ -1,11 +1,11 @@
-"""Test weave_challenge flows."""
+"""Test prot flows."""
 from typing import Iterable
 
 import pytest
 from prefect.testing.utilities import prefect_test_harness
 from py2neo import Graph, Node, Relationship
 
-from weave_challenge.flows import ingest_uniprot_into_neo4j_flow, load_into_neo4j
+from prot.flows import ingest_uniprot_into_neo4j_flow, load_into_neo4j
 
 
 @pytest.fixture

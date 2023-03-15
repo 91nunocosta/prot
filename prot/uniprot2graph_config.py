@@ -1,5 +1,5 @@
 """Configures UniProt translation into properties graph."""
-from weave_challenge.xml_extract import XML2GraphConfig
+from prot.xml_extract import XML2GraphConfig
 
 UNITPROT2GRAPTH_CONFIG = XML2GraphConfig(
     node_labels={
