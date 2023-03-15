@@ -1,7 +1,6 @@
 """Provides XML parsing to extract properties graph."""
 import io
 import xml.sax  # nosec the input XML are trusted
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set
 
@@ -9,26 +8,71 @@ import inflection
 import py2neo
 
 
-@dataclass
-class XML2GraphConfig:
-    """Configures how a XML document is translated into a properties graph,
-    defining:
-        - custom node labels for XML element types;
-        - custom property names for XML element attributes;
-        - custom relationships labels for XML childship relationships;
-        - elements to merge with their parents, replacing their parent name and
-        moving their attributes to their parents
-        - elements which aren't nodes and represent collections.
-    """
+class XML2GraphConfig:  # pylint: disable=too-few-public-methods
+    """Configures how to translate an XML document into a properties graph."""
 
-    node_labels: Dict[str, str] = field(default_factory=dict)
-    property_names: Dict[str, Dict[str, str]] = field(default_factory=dict)
-    property_types: Dict[str, Dict[str, Callable[[str], Any]]] = field(
-        default_factory=dict
-    )
-    relationship_labels: Dict[str, str] = field(default_factory=dict)
-    elements_for_merging_with_parents: Set[str] = field(default_factory=set)
-    collection_elements: Dict[str, str] = field(default_factory=dict)
+    def __init__(  # pylint: disable=too-many-arguments,
+        self,
+        node_labels: Optional[Dict[str, str]] = None,
+        property_names: Optional[Dict[str, Dict[str, str]]] = None,
+        property_types: Optional[Dict[str, Dict[str, Callable[[str], Any]]]] = None,
+        relationship_labels: Optional[Dict[str, str]] = None,
+        elements_for_merging_with_parents: Optional[Set[str]] = None,
+        collection_elements: Optional[Dict[str, str]] = None,
+    ) -> None:
+        """Configures how to translate an XML document into a properties graph.
+
+        Args:
+            node_labels:
+                Maps XML element names into target nodes labels.
+            property_names:
+                Maps XML attribute names into target node property names.
+            property_types:
+                Maps XML element and property names into callables for
+                coercing their values.
+            relationship_labels:
+                Maps XML element names into the label for the relationship of
+                the parent node with it.
+            elements_for_merging_with_parents:
+                Defines a set of XML elements to merge with parent nodes.
+                The listed XML elements aren't translated into new nodes.
+                Instead, the extractor merges them into the nodes corresponding to
+                their XML parents.
+                Their labels replace the parent labels.
+                Their attributes extend the parent node properties.
+            collection_elements:
+                Specifies which XML elements aggregate relationships between
+                their parent and their children.
+                The listed XML elements aren't translated into new nodes.
+                Instead, the extractor creates a relationship between their parent
+                and each child.
+                This parameter maps the XML element name into the label of
+                the relationships to create.
+        """
+        if node_labels is None:
+            self.node_labels: Dict[str, str] = {}
+        else:
+            self.node_labels = node_labels
+        if property_names is None:
+            self.property_names: Dict[str, Dict[str, str]] = {}
+        else:
+            self.property_names = property_names
+        if property_types is None:
+            self.property_types: Dict[str, Dict[str, Callable[[str], Any]]] = {}
+        else:
+            self.property_types = property_types
+        if relationship_labels is None:
+            self.relationship_labels: Dict[str, str] = {}
+        else:
+            self.relationship_labels = relationship_labels
+        if elements_for_merging_with_parents is None:
+            self.elements_for_merging_with_parents: Set[str] = set()
+        else:
+            self.elements_for_merging_with_parents = elements_for_merging_with_parents
+        if collection_elements is None:
+            self.collection_elements: Dict[str, str] = {}
+        else:
+            self.collection_elements = collection_elements
 
 
 class PropertiesSubgraphHandler(xml.sax.ContentHandler):
