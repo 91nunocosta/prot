@@ -19,5 +19,5 @@ UNITPROT2GRAPTH_CONFIG = XML2GraphConfig(
     collection_elements={
         "authorList": "HAS_AUTHOR",
     },
-    elements_for_merging_with_parents={"protein"},
+    elements_for_merging_with_parents={"entry", "protein"},
 )
