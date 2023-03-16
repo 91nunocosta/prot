@@ -57,8 +57,8 @@ It allows for translation into a _Cypher_ transaction as follows:
 As _n2_ is bound to the variable `n2` after the first clause, the next one doesn't imply
 a lookup. In this case, no lookup would be necessary.
 
-With a partial representation of the graph, it could be necessary to create one element
-at a time:
+With a partial graph representation, it could be necessary to create one element at
+a time:
 
 ```SQL
     CREATE [:N {p: 1}]
@@ -74,8 +74,8 @@ Although I didn't investigate to what extent `py2neo` takes advantage of such
 optimizations, its model is a good starting point.
 
 `py2neo` may be slower than `neo4j` official library at transaction execution.
-Yet, we could extend `neo4j` with a _properties graph_ interface matching `py2neo`'s
-one. Then taking advantage of the mentioned optimizations.
+Yet, we could extend `neo4j` with a _properties graph_ interface matching `py2neo`'s.
+Then taking advantage of the mentioned optimizations.
 
 ## Local usage
 
@@ -95,7 +95,7 @@ one. Then taking advantage of the mentioned optimizations.
 
 3. Install [_poetry_](https://python-poetry.org/) _package and dependency manager_.
 Follow the [poetry installation guide](https://python-poetry.org/docs/#installation).
-Chose the method that is more convenient to you, for example:
+Choose the method that is more convenient to you, for example:
 
    ```bash
    pip install --user poetry
@@ -113,8 +113,8 @@ Chose the method that is more convenient to you, for example:
    poetry shell
    ```
 
-6. Set environment variables needed for _neo4j_, which set the neo4j URI
-   and disables the authentication:
+6. Set environment variables needed for _neo4j_, the neo4j URI
+   and authentication (disabling it):
 
     ```bash
     source .env
@@ -127,7 +127,7 @@ Chose the method that is more convenient to you, for example:
     ```
 
 8. Open _neo4j_ at http://localhost:7474/browser/, select `No authentication` as
-   _Authentication type_ and press _connect_.
+   _Authentication type_, and press _connect_.
 
 ### Running the ingestion workflow
 
@@ -143,7 +143,7 @@ Chose the method that is more convenient to you, for example:
     ```
 
 3. _(Optional)_ Open the [Prefect UI](https://docs.prefect.io/ui/overview/)
-at the URL displayed in the following command's output.
+at the URL in the following command's output.
 
     ```bash
     prefect server start
@@ -156,7 +156,7 @@ at the URL displayed in the following command's output.
 1. Prepare the environment as described in
 [**Preparing the environment**](#preparing-the-environment).
 
-2. Create and upload an [deployment](https://docs.prefect.io/concepts/deployments/),
+2. Create and upload a [deployment](https://docs.prefect.io/concepts/deployments/)
    containing the workflow:
 
     ```bash
@@ -178,7 +178,7 @@ at the URL displayed in the following command's output.
     ```
 
 5. Open the [Prefect UI](https://docs.prefect.io/ui/overview/)
-at the URL displayed in the previous command's output.
+at the URL in the previous command's output.
 
 6. Check _neo4j_ at http://localhost:7474/browser/.
 
@@ -199,21 +199,21 @@ the extract and load tasks.
 2. Extract and load the XML files in chunks. That would allow handling XML files that
 don't fit into memory.
 
-3. Fine-tune the _neo4j_ transactions size, buffering the extracted nodes and
+3. Fine-tune the size of _neo4j_ transactions, buffering the extracted nodes and
    relationships if needed.
 
 4. Develop bulk _create_ and _merge_ operations optimized for _tree-shaped graphs_.
 Here we could use several heuristics:
 
    1. Assign univocal identifiers for every _node_ based on the corresponding XML
-element position. We could translate those ids into _Cypher_ variables, which could
-avoid some node lookups. We could also assign those ids to _indexed properties_,
+element position. We could translate those ids into _Cypher_ variables, thus avoiding
+some node lookups. We could also assign those ids to _indexed properties_
 to make node lookups faster.
 
-   2. Group all _nodes_ and _relationships_ _merges_ by child _node_ type.
+   2. Group all _nodes_ and _relationships_ _merge_ by child _node_ type.
 Given the _tree_ shape, there is a single parent _node_ type and parent
-_relationship_ type, for every _node_ type. It allows for patterns
-for every _Child_ _node_ type as the following:
+_relationship_ type for every _node_ type. It allows for patterns
+for every _Child_ _node_ type:
 
     ```SQL
     {
@@ -241,10 +241,11 @@ for every _Child_ _node_ type as the following:
     ```
 
 5. Develop a slimmer representation of the graphs. `py2neo` stores _property_ names
-and values along with the _nodes_ and _relationships_. Yet, the nodes of the same _label_/type,
-share the same set of properties. A collection of bi-dimensional arrays per _node_ type can
-store all instances for each type. Rows would represent the _nodes_ and columns their
-_properties_. This way, we would store each _property_ name only once per _node_ type.
+and values along with the _nodes_ and _relationships_. Yet, the nodes of the same
+type share the same properties. A collection of bi-dimensional arrays per _node_ type
+can store all instances for each type. Rows would represent nodes. The columns would
+represent the corresponding properties. This way, we would store each _property_ name once
+per _node_ type.
 
 6. Extend the [uniprot2graph](./prot/uniprot2graph_config.py) configuration to improve
 the graph representation of _UniProt_ data. We could create a Python script to generate
