@@ -1,11 +1,12 @@
 """Test prot flows."""
+from pathlib import Path
 from typing import Iterable
 
 import pytest
 from prefect.testing.utilities import prefect_test_harness
-from py2neo import Graph, Node, Relationship
+from py2neo import Graph, Node, Relationship, Subgraph
 
-from prot.flows import ingest_uniprot_into_neo4j_flow, load_into_neo4j
+from prot.flows import extract_from_xml, ingest_uniprot_into_neo4j_flow, load_into_neo4j
 
 
 @pytest.fixture
@@ -21,10 +22,18 @@ def graph() -> Iterable[Graph]:
     _graph.delete_all()
 
 
+def test_task_extract_from_xml() -> None:
+    """Test extracting the graph from the file using the uniprot2graph_config."""
+    xml_file: Path = Path(__file__).parent.parent / "data" / "Q9Y261.xml"
+    subgraph: Subgraph = extract_from_xml.fn(xml_file)
+    assert len(subgraph.nodes) > 0
+    assert len(subgraph.relationships) > 0
+
+
 def test_task_load_into_neo4j(
     graph: Graph,  # pylint: disable=redefined-outer-name
 ) -> None:
-    """Test loading a stream of subgraphs into neo4j.
+    """Test loading a property graph into neo4j.
 
     Args:
         graph (Graph): clean py2neo Graph instance
