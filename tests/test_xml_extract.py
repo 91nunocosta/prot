@@ -219,9 +219,7 @@ def test_extract_graph_with_custom_property_names(tmp_path: Path) -> None:
     )
     config = XML2GraphConfig(
         property_names={
-            "entry": {
-                "created": "created_at",
-            }
+            ("entry", "created"): "created_at",
         },
     )
     subgraph: Subgraph = extract_graph(xml_file_path, config)
@@ -250,7 +248,7 @@ def test_extract_graph_with_custom_attribute_value_types(tmp_path: Path) -> None
 
     config = XML2GraphConfig(
         property_types={
-            "entry": {"created": lambda v: dateutil.parser.parse(v).date()}
+            ("entry", "created"): lambda v: dateutil.parser.parse(v).date()
         },
     )
 
@@ -311,6 +309,34 @@ def test_extract_graph_with_merges(tmp_path: Path) -> None:
             ("Protein", "HAS_ACCESSION", "Accession"),
             ("Protein", "HAS_ACCESSION", "Accession"),
             ("Protein", "HAS_RECOMMENDED_NAME", "RecommendedName"),
+        ],
+    )
+
+
+def test_extract_graph_with_merge_but_no_parent(tmp_path: Path) -> None:
+    """Test task for extracting a properties subgraph from a xml file,
+    configuring an element to merge with its parent, but with xml where
+    it has no parent.
+
+    Args:
+        tmp_path: temporary directory for creating test data files.
+    """
+    xml_file_path: Path = create_xml_file(
+        tmp_path / "example.xml",
+        """
+          <protein _id="Q9Y261"></protein>
+        """,
+    )
+
+    config = XML2GraphConfig(elements_for_merging_with_parents={"protein"})
+    subgraph: Subgraph = extract_graph(xml_file_path, config=config)
+
+    assert len(subgraph.nodes) == 1
+
+    assert equal_nodes(
+        subgraph.nodes,
+        [
+            Node("Protein", _id="Q9Y261"),
         ],
     )
 

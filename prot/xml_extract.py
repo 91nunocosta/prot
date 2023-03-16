@@ -2,7 +2,7 @@
 import io
 import xml.sax  # nosec the input XML are trusted
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import inflection
 import py2neo
@@ -14,8 +14,8 @@ class XML2GraphConfig:  # pylint: disable=too-few-public-methods
     def __init__(  # pylint: disable=too-many-arguments,
         self,
         node_labels: Optional[Dict[str, str]] = None,
-        property_names: Optional[Dict[str, Dict[str, str]]] = None,
-        property_types: Optional[Dict[str, Dict[str, Callable[[str], Any]]]] = None,
+        property_names: Optional[Dict[Tuple[str, str], str]] = None,
+        property_types: Optional[Dict[Tuple[str, str], Callable[[str], Any]]] = None,
         relationship_labels: Optional[Dict[str, str]] = None,
         elements_for_merging_with_parents: Optional[Set[str]] = None,
         collection_elements: Optional[Dict[str, str]] = None,
@@ -25,14 +25,23 @@ class XML2GraphConfig:  # pylint: disable=too-few-public-methods
         Args:
             node_labels:
                 Maps XML element names into target nodes labels.
+                Example:
+                    {"entry": "Record"}
             property_names:
-                Maps XML attribute names into target node property names.
+                Maps pairs of XML element and attribute names into target node property
+                names.
+                Example:
+                    {("entry","created"): "created_at")}
             property_types:
-                Maps XML element and property names into callables for
+                Maps pairs of XML element and property names into callables for
                 coercing their values.
+                Example:
+                    {("entry", "created"): lambda v: dateutil.parser.parse(v)}
             relationship_labels:
                 Maps XML element names into the label for the relationship of
                 the parent node with it.
+                Example:
+                    {"entry": "HAS_RECORD"}
             elements_for_merging_with_parents:
                 Defines a set of XML elements to merge with parent nodes.
                 The listed XML elements aren't translated into new nodes.
@@ -40,6 +49,8 @@ class XML2GraphConfig:  # pylint: disable=too-few-public-methods
                 their XML parents.
                 Their labels replace the parent labels.
                 Their attributes extend the parent node properties.
+                Example:
+                    {"protein"}
             collection_elements:
                 Specifies which XML elements aggregate relationships between
                 their parent and their children.
@@ -48,17 +59,19 @@ class XML2GraphConfig:  # pylint: disable=too-few-public-methods
                 and each child.
                 This parameter maps the XML element name into the label of
                 the relationships to create.
+                Example:
+                    {"authorList": "HAS_AUTHOR"}
         """
         if node_labels is None:
             self.node_labels: Dict[str, str] = {}
         else:
             self.node_labels = node_labels
         if property_names is None:
-            self.property_names: Dict[str, Dict[str, str]] = {}
+            self.property_names: Dict[Tuple[str, str], str] = {}
         else:
             self.property_names = property_names
         if property_types is None:
-            self.property_types: Dict[str, Dict[str, Callable[[str], Any]]] = {}
+            self.property_types: Dict[Tuple[str, str], Callable[[str], Any]] = {}
         else:
             self.property_types = property_types
         if relationship_labels is None:
@@ -79,6 +92,7 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
     """SAX XML handler for collecting property graph's nodes and relationships."""
 
     META_ATTR_PREFIXES = {"xmlns", "xsi"}
+    ELEMENT_TEXT_PROPERTY_NAME = "value"
 
     def __init__(
         self,
@@ -90,7 +104,7 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         self.config: XML2GraphConfig = config
         self.nodes: Set[py2neo.Node] = nodes
         self.relationships: Set[py2neo.Relationship] = relationships
-        self.stack: List[py2neo.Node] = []
+        self.nodes_stack: List[py2neo.Node] = []
         self.text_stack: List[io.StringIO] = []
         self.active_collection_element: Optional[str] = None
 
@@ -105,7 +119,7 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         return element_name[0].upper() + element_name[1:]
 
     def _relationship_label(self, element_name: str) -> str:
-        if self.active_collection_element and self.config:
+        if self.active_collection_element:
             return self.config.collection_elements[self.active_collection_element]
 
         if element_name in self.config.relationship_labels:
@@ -113,22 +127,38 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
         return "HAS_" + inflection.underscore(element_name).upper()
 
     def _property_name(self, element_name: str, attr_name: str) -> str:
-        if (
-            element_name in self.config.property_names
-            and attr_name in self.config.property_names[element_name]
-        ):
-            return self.config.property_names[element_name][attr_name]
+        if (element_name, attr_name) in self.config.property_names:
+            return self.config.property_names[element_name, attr_name]
         return attr_name
 
     def _property_value(
         self, element_name: str, attr_name: str, attr_value: str
     ) -> Any:
-        if (
-            element_name in self.config.property_types
-            and attr_name in self.config.property_types[element_name]
-        ):
-            return self.config.property_types[element_name][attr_name](attr_value)
+        if (element_name, attr_name) in self.config.property_types:
+            return self.config.property_types[element_name, attr_name](attr_value)
         return attr_value
+
+    def _start_collection(self, name: str) -> None:
+        self.active_collection_element = name
+
+    def _merge_with_parent(self, node_label: str, properties: Dict[str, Any]) -> None:
+        node = self.nodes_stack[-1]
+        node.clear_labels()
+        node.add_label(node_label)
+        node.update(properties)
+
+    def _create_new_node(
+        self, node_label: str, properties: Dict[str, Any], relationship_label: str
+    ) -> None:
+        node = py2neo.Node(node_label, **properties)
+        self.nodes.add(node)
+        if self.nodes_stack:
+            parent_relationship = py2neo.Relationship(
+                self.nodes_stack[-1], relationship_label, node
+            )
+            self.relationships.add(parent_relationship)
+        self.nodes_stack.append(node)
+        self.text_stack.append(io.StringIO())
 
     def startElement(self, name: str, attrs: Dict[str, str]) -> None:
         node_label = self._node_label(name)
@@ -138,45 +168,26 @@ class PropertiesSubgraphHandler(xml.sax.ContentHandler):
             if not self._is_meta_attr(k)
         }
         relationship_label = self._relationship_label(name)
-
-        if self.config.collection_elements and name in self.config.collection_elements:
-            self.active_collection_element = name
-            return
-
-        if (
-            self.config.elements_for_merging_with_parents
-            and name in self.config.elements_for_merging_with_parents
-            and self.stack
-        ):
-            node = self.stack[-1]
-            node.clear_labels()
-            node.add_label(node_label)
-            node.update(properties)
-            return
-
-        node = py2neo.Node(node_label, **properties)
-        self.nodes.add(node)
-        if self.stack:
-            parent_relationship = py2neo.Relationship(
-                self.stack[-1], relationship_label, node
-            )
-            self.relationships.add(parent_relationship)
-        self.stack.append(node)
-        self.text_stack.append(io.StringIO())
+        if name in self.config.collection_elements:
+            self._start_collection(name)
+        elif name in self.config.elements_for_merging_with_parents and self.nodes_stack:
+            self._merge_with_parent(node_label, properties)
+        else:
+            self._create_new_node(node_label, properties, relationship_label)
 
     def characters(self, content: str) -> None:
         if self.text_stack:
             self.text_stack[-1].write(content)
 
     def endElement(self, name: str) -> None:
-        if self.stack:
-            if name not in self.config.elements_for_merging_with_parents:
-                parent = self.stack.pop()
-                if self.text_stack:
-                    txt: str = self.text_stack[-1].getvalue().strip()
-                    if txt:
-                        parent["value"] = txt
-                self.text_stack.pop()
+        if (
+            self.nodes_stack
+            and name not in self.config.elements_for_merging_with_parents
+        ):
+            node = self.nodes_stack.pop()
+            element_text: str = self.text_stack.pop().getvalue().strip()
+            if element_text:
+                node[self.ELEMENT_TEXT_PROPERTY_NAME] = element_text
         if self.active_collection_element == name:
             self.active_collection_element = None
 
